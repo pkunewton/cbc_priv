@@ -1,0 +1,16 @@
+
+options{
+    STATIC = false;
+    JDK_VERSION = "1.8";
+}
+
+PARSER_BEGIN(Parser)
+
+class Parser {
+    System.out.println("");
+}
+
+PARSER_END(Parser)
+
+SPECIAL_TOKEN: { <SPACES: (" ", "\f", "\t", "\r", "\n")+> }
+
