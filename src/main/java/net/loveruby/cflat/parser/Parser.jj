@@ -12,5 +12,17 @@ class Parser {
 
 PARSER_END(Parser)
 
+/*
+ * 词法分析
+ */
+
+// 空白符，换行符等
 SPECIAL_TOKEN: { <SPACES: (" ", "\f", "\t", "\r", "\n")+> }
 
+// 多行注释
+MORE: { <"/*">: IN_BLOCK_COMMENT }
+<IN_BLOCK_COMMENT> MORE: { <~[]> }
+<IN_BLOCK_COMMENT> SPECIAL_TOKEN: { <BLOCK_COMMENT: "*/">: DEFAULT }
+
+// 单行注释
+SPECIAL_TOKEN: { <LINE_COMMENT: "//" (~["\n", "\r"])* ("\n"|"\r\n"|"\r")?> }
