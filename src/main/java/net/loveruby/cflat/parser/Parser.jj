@@ -26,3 +26,36 @@ MORE: { <"/*">: IN_BLOCK_COMMENT }
 
 // 单行注释
 SPECIAL_TOKEN: { <LINE_COMMENT: "//" (~["\n", "\r"])* ("\n"|"\r\n"|"\r")?> }
+
+// 关键字
+
+// 标识符
+
+// 数字
+
+// 字符
+
+// 字符串
+
+
+
+/*
+ * 语法分析
+ */
+
+// 抽象语法树生成
+AST compilation_unit():
+{
+    Token t;
+    Declarations impdecls, decls;
+}
+{
+        {
+            t = getToken(1);
+        }
+    impdecls=import_stmts() decls=top_defs() <EOF>
+        {
+            decls.add(impdecls);
+            return new AST(location(t), decls);
+        }
+}
