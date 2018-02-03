@@ -1,6 +1,8 @@
 
 options{
     STATIC = false;
+    DEBUG_PARSER = true;
+    UNICODE_INPUT = true;
     JDK_VERSION = "1.8";
 }
 
@@ -28,6 +30,12 @@ MORE: { <"/*">: IN_BLOCK_COMMENT }
 SPECIAL_TOKEN: { <LINE_COMMENT: "//" (~["\n", "\r"])* ("\n"|"\r\n"|"\r")?> }
 
 // 关键字
+TOKEN: {
+    <VOID   : "void">
+   |<CHAR   :>
+   |<SHORT  :>
+   |
+}
 
 // 标识符
 
@@ -59,3 +67,4 @@ AST compilation_unit():
             return new AST(location(t), decls);
         }
 }
+
