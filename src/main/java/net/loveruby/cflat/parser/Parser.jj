@@ -1,4 +1,3 @@
-
 options{
     STATIC = false;
     DEBUG_PARSER = true;
@@ -31,20 +30,66 @@ SPECIAL_TOKEN: { <LINE_COMMENT: "//" (~["\n", "\r"])* ("\n"|"\r\n"|"\r")?> }
 
 // 关键字
 TOKEN: {
-    <VOID   : "void">
-   |<CHAR   :>
-   |<SHORT  :>
-   |
+      <VOID   : "void">
+    | <CHAR   :>
+    | <SHORT  :>
+    | <INT      : "int">
+    | <LONG     : "long">
+    | <STRUCT   : "struct">
+    | <UNION    : "union">
+    | <ENUM     : "enum">
+    | <STATIC   : "static">
+    | <EXTERN   : "extern">
+    | <CONST    : "const">
+    | <SIGNED   : "signed">
+    | <UNSIGNED : "unsigned">
+    | <IF       : "if">
+    | <ELSE     : "else">
+    | <SWITCH   : "switch">
+    | <CASE     : "case">
+    | <DEFAULT_ : "default">
+    | <WHILE    : "while">
+    | <DO       : "do">
+    | <FOR      : "for">
+    | <RETURN   : "return">
+    | <BREAK    : "break">
+    | <CONTINUE : "continue">
+    | <GOTO     : "goto">
+    | <TYPEDEF  : "typedef">
+    | <IMPORT   : "import">
+    | <SIZEOF   : "sizeof">
 }
 
 // 标识符
+TOKEN: {
+    <IDENTIFIER: ["A"-"Z", "a"-"z", "_"](["A"-"Z", "a"-"z", "_", "0"-"9"])* >
+}
 
 // 数字
+TOKEN: {
+    <INTEGER: ["1"-"9"] (["0"-"9"])* ("U")? ("L")?
+                          | "0" ["x", "X"] (["0"-"9", "a"-"f", "A"-"F"])+ ("U")? ("L")?
+                          | "0" (["0"-"7"])* ("U")? ("L")?
+                          >
+}
 
 // 字符
+MORE: {"\'": IN_CHARACTER }                         // rule1
+<IN_CHARACTER> MORE: {
+      <~["'", "\\", "\n", "\r"]> : CHARACTER_TERM      // rule2
+    | <"\\" (["0"-"7"]){3}>      : CHARACTER_TERM      // rule3
+    | <"\\" ~[]>                 : CHARACTER_TERM      // rule4
+}
+<CHARACTER_TERM> TOKEN: { <CHARACTER: "'"> : DEFAULT } // rule5}
 
 // 字符串
-
+MORE: { <"\""> : IN_STRING }                           // rule1
+<IN_STRING> MORE: {
+      <(~["\"", "\\", "\n", "\r"])+>                   // rule2
+    | <"\\" (["0"-"7"]){3}>                            // rule3
+    | <"\\" ~[]>                                       // rule4
+}
+<IN_STRING> TOKEN: { <STRING: "\""> : DEFAULT }        // rule5
 
 
 /*
