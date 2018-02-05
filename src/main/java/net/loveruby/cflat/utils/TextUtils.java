@@ -9,7 +9,7 @@ import java.io.UnsupportedEncodingException;
  */
 public abstract class TextUtils {
 
-    static final private byte vtab = 013;
+    static final private byte vtab = 013; // ascii码中的垂直制表符
 
     static public String dumpString(String content){
         try {
