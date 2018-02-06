@@ -12,24 +12,42 @@ import net.loveruby.cflat.utils.ErrorHandler;
 
 class Parser {
 
+    // 生成语法树，不包含调试信息
     static public AST parserFile(File file, LibraryLoader loader,
                         ErrorHandler errorHandler) throws SyntaxException, FileException {
         return parseFile(file, loader, errorHandler, false);
     }
-
+    // 生成语法树
     static public AST parserFile(File file, LibraryLoader loader,
                         ErrorHandler errorHandler, boolean debug) throws SyntaxException, FileException {
         return new newFileParser(file, loader, errorHandler, debug).parse();
     }
-
-    static public AST parserDeclFile(File file, LibraryLoader loader,
+    // 解析声明的变量和函数，不包含调试信息
+    static public Declarations parserDeclFile(File file, LibraryLoader loader,
                         ErrorHandler errorHandler) throws SyntaxException, FileException {
         return parseDeclFile(file, loader, errorHandler, false);
     }
-
-    static public AST parserDeclFile(File file, LibraryLoader loader,
+    // 解析声明的变量和函数
+    static public Declarations parserDeclFile(File file, LibraryLoader loader,
                         ErrorHandler errorHandler, boolean debug) throws SyntaxException, FileException {
         return new newDeclFileParser(file, loader, errorHandler, debug).parseDecls();
+    }
+
+
+    static final public String SOURCE_ENCODING = "UTF-8";
+    // 读取源文件，生成Parser对象
+    static public Parser newFileParser()(File file, LibraryLoader loader,
+                        ErrorHandler errorHandler, boolean debug) throws FileException {
+        try {
+            BufferedReader reader = new BufferedReader(
+                                            new InputStreamReader(
+                                                    new FileInputStream(file), SOURCE_ENCODING));
+            return new Parser(reader, file.getPath(), loader, errorHandler, debug);
+        }catch (FileNotFoundException ex){
+            throw new FileException(ex.getMessage());
+        }catch (UnsupportedEncodingException ex){
+            throw new Error("UTF-8 is not supported: " + ex.getMessage());
+        }
     }
 }
 
