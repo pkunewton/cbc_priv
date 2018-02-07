@@ -49,12 +49,16 @@ public abstract class TextUtils {
         return buffer.toString();
     }
 
-    // 把 byte 型数据转换成 unsigned 类型
+    /**
+     * 把 byte 型数据转换成 unsigned 类型
+     * */
     static private int toUnsigned(byte b){
         return b >= 0 ? b : b + 256;
     }
 
-    // 检查整数c是否在byte中可打印的范围 32 - 126
+    /**
+     * 检查整数c是否在byte中可打印的范围 32 - 126
+     * */
     static public boolean isPrintable(int c){
         return (' ' <= c) && ('~' >= c);
     }

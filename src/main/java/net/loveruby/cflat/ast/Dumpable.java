@@ -2,8 +2,8 @@ package net.loveruby.cflat.ast;
 
 /**
  * @author 刘科 2018/02/07
- * */
-public class AST extends Node {
+ */
+public interface Dumpable {
 
-
+    void dump(Dumper d);
 }

@@ -22,18 +22,19 @@ class Parser {
                         ErrorHandler errorHandler, boolean debug) throws SyntaxException, FileException {
         return new newFileParser(file, loader, errorHandler, debug).parse();
     }
-    // 解析声明的变量和函数，不包含调试信息
+    // 解析 声明的变量和函数，不包含调试信息
     static public Declarations parserDeclFile(File file, LibraryLoader loader,
                         ErrorHandler errorHandler) throws SyntaxException, FileException {
         return parseDeclFile(file, loader, errorHandler, false);
     }
-    // 解析声明的变量和函数
+    // 解析 声明的变量和函数
     static public Declarations parserDeclFile(File file, LibraryLoader loader,
                         ErrorHandler errorHandler, boolean debug) throws SyntaxException, FileException {
         return new newDeclFileParser(file, loader, errorHandler, debug).parseDecls();
     }
 
 
+    // 源文件编码格式，设定为 UTF-8
     static final public String SOURCE_ENCODING = "UTF-8";
     // 读取源文件，生成Parser对象
     static public Parser newFileParser()(File file, LibraryLoader loader,
