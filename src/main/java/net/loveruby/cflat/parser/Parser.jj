@@ -6,9 +6,16 @@ options{
 }
 
 PARSER_BEGIN(Parser)
-package net.loveruby.cflat.parser;
-import java.io.*;
+
+import net.loveruby.cflat.ast.*;
+import net.loveruby.cflat.entity.*;
+import net.loveruby.cflat.type.*;
+import net.loveruby.cflat.asm.Label;
 import net.loveruby.cflat.utils.ErrorHandler;
+import net.loveruby.cflat.exception.*;
+import java.lang.reflect.*;
+import java.util.*;
+import java.io.*;
 
 class Parser {
 
@@ -37,7 +44,7 @@ class Parser {
     // 源文件编码格式，设定为 UTF-8
     static final public String SOURCE_ENCODING = "UTF-8";
     // 读取源文件，生成Parser对象
-    static public Parser newFileParser()(File file, LibraryLoader loader,
+    static public Parser newFileParser(File file, LibraryLoader loader,
                         ErrorHandler errorHandler, boolean debug) throws FileException {
         try {
             BufferedReader reader = new BufferedReader(
@@ -50,6 +57,53 @@ class Parser {
             throw new Error("UTF-8 is not supported: " + ex.getMessage());
         }
     }
+
+    private String sourceName;
+    private LibraryLoader loader;
+    private ErrorHandler errorHandler;
+    private Set<String> knownTypedefs;  // Typedef 重命名的类型
+
+    // 构造函数 1
+    public Parser(Reader reader, String name,
+            LoadLibrary loader, ErrorHandler errorHandler){
+        this(reader, name, loader, errorHandler);
+    }
+    // 构造函数 2
+    public Parser(Reader reader, String name,
+            LoadLibrary loader, ErrorHandler errorHandler, boolean debug){
+        this(reader);  // javaCC 有四个默认构造函数，其中一个构造函数是 Parser(Reader reader)
+        this.sourceName = name;
+        this.loader = loader;
+        this.errorHandler = errorHandler;
+        this.knownTypedefs = new HashSet<String>();
+        // cbc 中参数 --debug-parser 指定 且在 javaCC 的选项中启用 DEBUG_PARSER
+        if(debug){
+            // javaCC 生成的方法
+            enable_tracing();
+        }else{
+            disable_tracing();
+        }
+    }
+
+    // 解析源文件生成抽象语法树
+    public AST parse() throws SyntaxException {
+        try {
+            return compilation_unit();
+        }catch (TokenMgrError ex){
+            throw new SyntaxException(ex.getMessage());
+        }catch (ParseException ex){
+            throw new SyntaxException(ex.getMessage());
+        }catch (LookAheadSuccess err){
+            throw new SyntaxException("syntax error");
+        }
+    }
+
+
+    // 获取 源文件sourceName 的 token 的位置
+    protected Location location(Token t){
+        return new Location(sourceName, t);
+    }
+
 }
 
 PARSER_END(Parser)
@@ -59,7 +113,7 @@ PARSER_END(Parser)
  */
 
 // 空白符，换行符等
-SPECIAL_TOKEN: { <SPACES: (" ", "\f", "\t", "\r", "\n")+> }
+SPECIAL_TOKEN: { <SPACES: ([" ", "\f", "\t", "\r", "\n"])+> }
 
 // 多行注释
 MORE: { <"/*">: IN_BLOCK_COMMENT }
@@ -151,6 +205,35 @@ AST compilation_unit():
         {
             decls.add(impdecls);
             return new AST(location(t), decls);
+        }
+}
+// 解析头文件中的声明（ 含有源文件中不能包含 extern ）
+Declarations declaration_file():
+{
+    Declarations impdecls, decls = new Declarations();
+    UndefinedFunction funcdecl;
+    UndefinedVariable vardecl;
+    Constant defconst;
+    StructNode defstruct;
+    UnionNode defunion;
+    TypedefNode typedef;
+}
+{
+    impdecls=import_stmts()
+        {
+            return decls.add(impdecls);
+        }
+    ( LOOKAHEAD(<EXTERN> typeref() <IDENTIFIER> "(")
+    funcdecl=funcdecl() { decls.addFuncdecl(funcdecl); }
+    | vardecl=vardecl() { decls.addVardecl(vardecl); }
+    | deconst=defconst() { decls.addConstant(defconst); }
+    | defstruct=defstruct() { decls.addDefstruct(defstruct); }
+    | defunion=defunion() { decls.addDefunion(defunion); }
+    | typedef=typedef() { decls.addTypedef(typedef); }
+    )*
+    <EOF>
+        {
+            return decls;
         }
 }
 

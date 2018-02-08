@@ -14,7 +14,7 @@ public abstract class TextUtils {
     static public String dumpString(String content){
         try {
             // 此处的编码格式应该是 Parser.SOURCE_ENCODING
-            // TODO
+            // return dumpString(content, Parser.SOURE_ENCODING);
             return dumpString(content, "UTF-8");
         }catch (UnsupportedEncodingException ex){
             throw new Error("UTF-8 is not supported??: " + ex.getMessage());
