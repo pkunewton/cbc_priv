@@ -3,7 +3,6 @@ package net.loveruby.cflat.entity;
 import net.loveruby.cflat.asm.ImmediateValue;
 import net.loveruby.cflat.asm.MemoryReference;
 import net.loveruby.cflat.asm.Operand;
-import net.loveruby.cflat.ast.Dumper;
 import net.loveruby.cflat.ast.ExprNode;
 import net.loveruby.cflat.ast.Location;
 import net.loveruby.cflat.ast.TypeNode;

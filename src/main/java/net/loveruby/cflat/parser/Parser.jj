@@ -97,6 +97,143 @@ class Parser {
             throw new SyntaxException("syntax error");
         }
     }
+    // 解析 头文件的声明
+    public Declarations parseDecls() throws SyntaxException {
+        try {
+            return declaration_file();
+        }catch (TokenMgrError ex) {
+            throw new SyntaxException(ex.getMessage());
+        }catch (ParseException ex) {
+            throw new SyntaxException(ex.getMessage());
+        }
+    }
+
+    // 把 Typedef 重命名的类名加入到 knownTypedefs 中， import_stmts()中使用
+    private void addKnownTypedefs(List<TypedefNode> typedefs){
+        for(TypedefNode typedef : typedefs){
+            addType(typedef.name());
+        }
+    }
+    // typedef() 中用到
+    private void addType(String name){
+        knownTypedefs.add(name);
+    }
+    // 判断 type_base() 中 <IDENTIFIER>是否是类型名
+    public boolean isType(String name){
+        return knownTypedefs.contains(name);
+    }
+
+    // 把整数 字面量转换成对应的 IntegerLiteralNode 节点，并确定类型
+    private IntegerLiteralNode(Location loc, String image){
+        long i = integerValue(image);
+        if (image.endsWith("UL")) {
+            return new IntegerLiteralNode(loc, IntegerTypeRef.ulongRef(), i);
+        }
+        else if (image.endsWith("L")) {
+            return new IntegerLiteralNode(loc, IntegerTypeRef.longRef(), i);
+        }
+        else if (image.endsWith("U")) {
+            return new IntegerLiteralNode(loc, IntegerTypeRef.uintRef(), i);
+        }
+        else {
+            return new IntegerLiteralNode(loc, IntegerTypeRef.intRef(), i);
+        }
+    }
+    // 把 整形字面量 转换成 对应的数字，并区分进制的区别
+    private long integerValue(String){
+        String s = image.replaceFirst("[UL]+", "");
+        if(s.startWith("0x") && s.startWith("0X")){
+            return Long.parserLong(s.substring(2), 16);
+        }
+        else if (s.startsWith("0") && !s.equals("0")) {
+            return Long.parseLong(s.substring(1), 8);
+        }
+        else {
+            return Long.parseLong(s, 10);
+        }
+    }
+
+    // 处理 char 型数据字面量
+    private long characterCode(String image) throws ParseException {
+        String s = stringValue(image);
+        if (s.length() != 1) {
+            throw new Error("must not happen: character length > 1");
+        }
+        return (long)s.charAt(0);
+    }
+
+    // 处理 string 字面量
+    private String stringValue(String _image) throws ParseException {
+        int pos = 0;
+        int idx;
+        StringBuilder buf = new StringBuilder();
+        // 去掉首尾的 双引号
+        String image = _image.substring(1, _image.length() - 1);
+
+        // 查找 字面量 中的 转义字符
+        while ((idx = image.indexOf("\\", pos)) >= 0) {
+            buf.append(image.substring(pos, idx));
+            // 类似 \123 这样的八进制 ascii码
+            if (image.length() >= idx + 4
+                    && Character.isDigit(image.charAt(idx+1))
+                    && Character.isDigit(image.charAt(idx+2))
+                    && Character.isDigit(image.charAt(idx+3))) {
+                    // unescapeOctal 函数 把 八进制字面量 的 十进制int 再转成 char
+                buf.append(unescapeOctal(image.substring(idx+1, idx+4)));
+                pos = idx + 4;
+            }
+            else {
+                // 处理其余的转义字符
+                buf.append(unescapeSeq(image.charAt(idx+1)));
+                pos = idx + 2;
+            }
+        }
+        if (pos < image.length()) {
+            buf.append(image.substring(pos, image.length()));
+        }
+        return buf.toString();
+    }
+
+    // 用于 SizeofTypeNode, 因为 sizeof 的结果是一个 无符号长整型
+    private TypeRef size_t() {
+        return IntegerTypeRef.ulongRef();
+    }
+
+    // 把 类似 /123 这样的 八进制 ascii码 转换成 十进制
+    private static final int charMax = 255;
+
+    private char unescapeOctal(String digits) throws ParseException {
+        int i = Integer.parseInt(digits, 8);
+        if (i > charMax) {
+            throw new ParseException(
+                "octal character sequence too big: \\" + digits);
+        }
+        return (char)i;
+    }
+
+    // 处理 其他转移字符
+    private static final char bell = 7;
+    private static final char backspace = 8;
+    private static final char escape = 27;
+    private static final char vt = 11;
+
+    private char unescapeSeq(char c) throws ParseException {
+        switch (c) {
+        case '0': return '\0';
+        case '"': return '"';
+        case '\'': return '\'';
+        case 'a': return bell;
+        case 'b': return backspace;
+        case 'e': return escape;
+        case 'f': return '\f';
+        case 'n': return '\n';
+        case 'r': return '\r';
+        case 't': return '\t';
+        case 'v': return vt;
+        default:
+            throw new ParseException("unknown escape sequence: \"\\" + c);
+        }
+    }
 
 
     // 获取 源文件sourceName 的 token 的位置
