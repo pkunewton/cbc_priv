@@ -20,24 +20,24 @@ import java.io.*;
 class Parser {
 
     // 生成语法树，不包含调试信息
-    static public AST parserFile(File file, LibraryLoader loader,
+    static public AST parseFile(File file, LibraryLoader loader,
                         ErrorHandler errorHandler) throws SyntaxException, FileException {
         return parseFile(file, loader, errorHandler, false);
     }
     // 生成语法树
-    static public AST parserFile(File file, LibraryLoader loader,
+    static public AST parseFile(File file, LibraryLoader loader,
                         ErrorHandler errorHandler, boolean debug) throws SyntaxException, FileException {
-        return new newFileParser(file, loader, errorHandler, debug).parse();
+        return newFileParser(file, loader, errorHandler, debug).parse();
     }
     // 解析 声明的变量和函数，不包含调试信息
-    static public Declarations parserDeclFile(File file, LibraryLoader loader,
+    static public Declarations parseDeclFile(File file, LibraryLoader loader,
                         ErrorHandler errorHandler) throws SyntaxException, FileException {
         return parseDeclFile(file, loader, errorHandler, false);
     }
     // 解析 声明的变量和函数
-    static public Declarations parserDeclFile(File file, LibraryLoader loader,
+    static public Declarations parseDeclFile(File file, LibraryLoader loader,
                         ErrorHandler errorHandler, boolean debug) throws SyntaxException, FileException {
-        return new newDeclFileParser(file, loader, errorHandler, debug).parseDecls();
+        return newFileParser(file, loader, errorHandler, debug).parseDecls();
     }
 
 
@@ -65,12 +65,12 @@ class Parser {
 
     // 构造函数 1
     public Parser(Reader reader, String name,
-            LoadLibrary loader, ErrorHandler errorHandler){
-        this(reader, name, loader, errorHandler);
+            LibraryLoader loader, ErrorHandler errorHandler){
+        this(reader, name, loader, errorHandler, false);
     }
     // 构造函数 2
     public Parser(Reader reader, String name,
-            LoadLibrary loader, ErrorHandler errorHandler, boolean debug){
+            LibraryLoader loader, ErrorHandler errorHandler, boolean debug){
         this(reader);  // javaCC 有四个默认构造函数，其中一个构造函数是 Parser(Reader reader)
         this.sourceName = name;
         this.loader = loader;
@@ -89,11 +89,14 @@ class Parser {
     public AST parse() throws SyntaxException {
         try {
             return compilation_unit();
-        }catch (TokenMgrError ex){
+        }
+        catch (TokenMgrError ex){
             throw new SyntaxException(ex.getMessage());
-        }catch (ParseException ex){
+        }
+        catch (ParseException ex){
             throw new SyntaxException(ex.getMessage());
-        }catch (LookAheadSuccess err){
+        }
+        catch (LookAheadSuccess err){
             throw new SyntaxException("syntax error");
         }
     }
@@ -101,9 +104,11 @@ class Parser {
     public Declarations parseDecls() throws SyntaxException {
         try {
             return declaration_file();
-        }catch (TokenMgrError ex) {
+        }
+        catch (TokenMgrError ex) {
             throw new SyntaxException(ex.getMessage());
-        }catch (ParseException ex) {
+        }
+        catch (ParseException ex) {
             throw new SyntaxException(ex.getMessage());
         }
     }
@@ -124,7 +129,7 @@ class Parser {
     }
 
     // 把整数 字面量转换成对应的 IntegerLiteralNode 节点，并确定类型
-    private IntegerLiteralNode(Location loc, String image){
+    private IntegerLiteralNode integerNode(Location loc, String image){
         long i = integerValue(image);
         if (image.endsWith("UL")) {
             return new IntegerLiteralNode(loc, IntegerTypeRef.ulongRef(), i);
@@ -140,10 +145,10 @@ class Parser {
         }
     }
     // 把 整形字面量 转换成 对应的数字，并区分进制的区别
-    private long integerValue(String){
+    private long integerValue(String image){
         String s = image.replaceFirst("[UL]+", "");
-        if(s.startWith("0x") && s.startWith("0X")){
-            return Long.parserLong(s.substring(2), 16);
+        if(s.startsWith("0x") && s.startsWith("0X")){
+            return Long.parseLong(s.substring(2), 16);
         }
         else if (s.startsWith("0") && !s.equals("0")) {
             return Long.parseLong(s.substring(1), 8);
