@@ -5,4 +5,10 @@ package net.loveruby.cflat.compiler;
  */
 public class Compiler {
 
+    static public final String ProgramName = "cbc";
+    static public final String Version = "1.0.0";
+
+    public static void main(String[] args) {
+
+    }
 }

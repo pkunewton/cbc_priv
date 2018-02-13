@@ -11,7 +11,7 @@ abstract public class Node implements Dumpable {
 
     abstract public Location location();
 
-    abstract public void  _dump(Dumper d);
+    abstract protected void  _dump(Dumper d);
 
     public void dump(){
         dump(System.out);

@@ -16,7 +16,7 @@ abstract public class Entity
 
     protected String name;
     protected boolean isPrivate;
-    protected TypeNode typeNode;
+    protected TypeNode type;
     // 变量引用次数
     protected long nRefered;
     protected MemoryReference memref;
@@ -25,7 +25,7 @@ abstract public class Entity
     public Entity(String name, boolean isPrivate, TypeNode typeNode) {
         this.name = name;
         this.isPrivate = isPrivate;
-        this.typeNode = typeNode;
+        this.type = typeNode;
         this.nRefered = 0;
     }
 
@@ -38,7 +38,7 @@ abstract public class Entity
     }
 
     abstract public boolean isDefined();
-    abstract public boolean isInitiallized();
+    abstract public boolean isInitialized();
 
     public boolean isConstant() { return  false; }
     public boolean isParameter() { return  false; }
@@ -49,11 +49,11 @@ abstract public class Entity
     }
 
     public TypeNode typeNode() {
-        return typeNode;
+        return type;
     }
 
     public Type type() {
-        return typeNode.type();
+        return type.type();
     }
 
     public long allocSize() {
