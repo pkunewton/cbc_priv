@@ -224,7 +224,7 @@ class Parser {
 
     private char unescapeSeq(char c) throws ParseException {
         switch (c) {
-        case '0': return '\0';
+        case '0': return '\0';  // 空字符 NULL
         case '"': return '"';
         case '\'': return '\'';
         case 'a': return bell;
@@ -235,6 +235,7 @@ class Parser {
         case 'r': return '\r';
         case 't': return '\t';
         case 'v': return vt;
+        case '\\': return '\\';   // 原版本中没有处理 反斜杠\ 本身的内容 PS： 根据C语言定义 \xhh 两位十六进制 的字符也应该处理
         default:
             throw new ParseException("unknown escape sequence: \"\\" + c);
         }
@@ -245,7 +246,6 @@ class Parser {
     protected Location location(Token t){
         return new Location(sourceName, t);
     }
-
 }
 
 PARSER_END(Parser)
@@ -311,7 +311,7 @@ TOKEN: {
 }
 
 // 字符
-MORE: {"\'": IN_CHARACTER }                         // rule1
+MORE: {"'": IN_CHARACTER }                         // rule1
 <IN_CHARACTER> MORE: {
       <~["'", "\\", "\n", "\r"]> : CHARACTER_TERM      // rule2
     | <"\\" (["0"-"7"]){3}>      : CHARACTER_TERM      // rule3
