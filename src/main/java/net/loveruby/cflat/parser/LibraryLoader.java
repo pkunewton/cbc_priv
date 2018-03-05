@@ -47,7 +47,8 @@ public class LibraryLoader {
             throws CompileException {
         // 递归解析头文件时，判断是否循环引入了头文件
         if (loadingLibraries.contains(libid)){
-            throw new SemanticException("");
+            throw new SemanticException("recursive import from " + loadingLibraries.getLast()
+                                                + ": " + libid);
         }
         loadingLibraries.addLast(libid);
         Declarations declarations = loadedLibraries.get(libid);

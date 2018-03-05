@@ -61,8 +61,15 @@ public class Test {
         System.out.println(file.getPath());
 
         for (CompilerMode mode : CompilerMode.values()){
+            if (mode.ordinal() > 4) {
+                break;
+            }
             System.out.println(mode.toOption() + " has ordinal: " + mode.ordinal());
         }
+
+//        String key = "2dK3bN" + System.currentTimeMillis() + "P3F37w";
+//        System.out.println(key);
+        System.out.println('\\');
 
     }
 }

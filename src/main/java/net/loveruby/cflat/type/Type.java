@@ -12,7 +12,10 @@ public abstract class Type {
     abstract public long size();
     // 分配的存储空间大小
     public long allocSize() { return size(); }
-    // 校准后的存储空间大小
+    /**
+     * @see net.loveruby.cflat.utils.AsmUtils 根据平台 alignment 校准分配空间
+     * 校准对齐后的存储空间大小
+     */
     public long alignment() { return allocSize(); }
 
     abstract public boolean isSameType(Type other);

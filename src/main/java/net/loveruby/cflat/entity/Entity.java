@@ -68,7 +68,7 @@ abstract public class Entity
      * 增加引用次数
      * @see net.loveruby.cflat.compiler.LocalResolver
      * */
-    public void referef() {
+    public void refered() {
         ++nRefered;
     }
 

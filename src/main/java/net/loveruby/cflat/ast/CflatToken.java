@@ -77,21 +77,21 @@ public class CflatToken implements Iterable<CflatToken> {
      *                            specialToken 属性中
      */
     protected List<CflatToken> buildTokenList(Token first, boolean rejectFirstSpecials){
-        List<CflatToken> reslt = new ArrayList<CflatToken>();
+        List<CflatToken> result = new ArrayList<CflatToken>();
         boolean rejectSpecials = rejectFirstSpecials;
         for (Token t = first; t != null; t = t.next){
             // 当前面的 sepcialToken 不为空且不忽略specialToken时，将specialToken的内容保存在列表中
             if(t.specialToken != null && !rejectSpecials){
                 Token s = specialTokenHead(t);
                 for (; s != null; s = s.next){
-                    reslt.add(new CflatToken(s));
+                    result.add(new CflatToken(s));
                 }
             }
-            reslt.add(new CflatToken(t));
+            result.add(new CflatToken(t));
             // 第一个specialToken之后，不在忽略specialToken
             rejectSpecials = false;
         }
-        return reslt;
+        return result;
     }
 
     /**
