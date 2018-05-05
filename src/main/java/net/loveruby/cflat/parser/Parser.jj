@@ -380,6 +380,30 @@ Declarations declaration_file():
         }
 }
 
+Declarations import_stmts():
+{
+    String libid;
+    Declarations impdecls = new Declarations();
+}
+{
+    (libid=import_stmt()
+        {
+            try {
+                Declarations decls = loader.loadLibrary(libid, errorHandler);
+                if (decls != null) {
+                    impdecls.add(decls);
+                    addKnownTypedefs(decls.typedefs());
+                }
+            }
+            catch (CompileException ex) {
+                throw new ParseException(ex.getMessage());
+            }
+        }
+    )*
+        {
+            return impdecls;
+        }
+}
 
 // #@@range/import_stmt{
 String import_stmt():

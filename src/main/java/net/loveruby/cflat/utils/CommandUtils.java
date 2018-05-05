@@ -51,7 +51,7 @@ abstract public class CommandUtils {
     }
 
     static private void passThrough(InputStream stream) throws IOException{
-        //在windows中文版平台
+        // 在windows中文版平台
         // BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "gb2312"));
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
         String line;
