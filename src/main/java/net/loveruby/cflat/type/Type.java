@@ -40,7 +40,7 @@ public abstract class Type {
     public boolean isCallable(){ return false; }
 
     // Ability methods (binary)
-    abstract public boolean isCompatible(Type other);       // 是否可比较
+    abstract public boolean isCompatible(Type other);       // 是否兼容，相容（用于赋值运算符）
     abstract public boolean isCastableTo(Type target);      // 是否可做类型转换
 
     public Type baseType(){
