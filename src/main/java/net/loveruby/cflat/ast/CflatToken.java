@@ -84,7 +84,7 @@ public class CflatToken implements Iterable<CflatToken> {
             if(t.specialToken != null && !rejectSpecials){
                 Token s = specialTokenHead(t);
                 for (; s != null; s = s.next){
-                    result.add(new CflatToken(s));
+                    result.add(new CflatToken(s, true));
                 }
             }
             result.add(new CflatToken(t));
