@@ -43,6 +43,8 @@ public abstract class Type {
     abstract public boolean isCompatible(Type other);       // 是否兼容，相容（用于赋值运算符）
     abstract public boolean isCastableTo(Type target);      // 是否可做类型转换
 
+    // 数组元素类型
+    // 或者指针指向的元素的类型
     public Type baseType(){
         throw new SemanticError("#baseType called for undereferalbe type");
     }

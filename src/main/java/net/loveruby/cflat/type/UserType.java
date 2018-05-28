@@ -1,19 +1,18 @@
 package net.loveruby.cflat.type;
 
-/**
- * Created by Administrator on 2018/2/9.
- */
-public class PointerType extends Type {
+import net.loveruby.cflat.ast.Location;
+import net.loveruby.cflat.ast.TypeNode;
 
-    protected long size;
-    protected Type baseType;
+public class UserType extends NamedType {
 
-    public long size() {
-        return size;
+    protected TypeNode real;
+
+    public UserType(String name, TypeNode real, Location location){
+
     }
 
-    public Type baseType(){
-        return baseType;
+    public long size() {
+        return 0;
     }
 
     public boolean isSameType(Type other) {

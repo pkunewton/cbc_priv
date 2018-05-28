@@ -1,7 +1,19 @@
 package net.loveruby.cflat.ast;
 
 /**
- * Created by Administrator on 2018/2/9.
+ * @author 刘科 2018/5/27
  */
-public class BreakNode {
+public class BreakNode extends StmtNode {
+
+    public BreakNode(Location location) {
+        super(location);
+    }
+
+    public <S, E> S accept(ASTVisitor<S, E> visitor) {
+        return visitor.visit(this);
+    }
+
+    protected void _dump(Dumper d) {
+
+    }
 }
