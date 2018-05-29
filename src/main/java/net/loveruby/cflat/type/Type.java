@@ -28,13 +28,13 @@ public abstract class Type {
     public boolean isPointer() { return false; }
     public boolean isArray() { return false; }
     public boolean isCompositeType() { return false; }
-    public boolean isStuct() { return false; }
+    public boolean isStruct() { return false; }
     public boolean isUnion() { return false; }
     public boolean isUserType() { return false; }
     public boolean isFunction(){ return false; }
 
     // Ability methods (unary)
-    public boolean isAllocateArry(){ return false; }
+    public boolean isAllocateArray(){ return false; }
     public boolean isIncompleteArray(){ return false; }
     public boolean isScalar(){ return false; }              // 是否是标量，整形和指针
     public boolean isCallable(){ return false; }

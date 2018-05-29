@@ -5,20 +5,20 @@ import net.loveruby.cflat.ast.Location;
 /**
  * @author 刘科 2018/5/29
  */
-public class UserTypeRef extends TypeRef {
+public class UnionTypeRef extends TypeRef {
 
     protected String name;
 
-    public UserTypeRef(String name){
+    public UnionTypeRef(String name){
         this(null, name);
     }
 
-    public UserTypeRef(Location location, String name){
+    public UnionTypeRef(Location location, String name) {
         super(location);
         this.name = name;
     }
 
-    public boolean isUserType(){
+    public boolean isUnion(){
         return true;
     }
 
@@ -28,14 +28,14 @@ public class UserTypeRef extends TypeRef {
 
     @Override
     public boolean equals(Object obj) {
-        if(!(obj instanceof UserTypeRef)){
+        if(!(obj instanceof UnionTypeRef)){
             return false;
         }
-        return name.equals(((UserTypeRef) obj).name);
+        return name.equals(((UnionTypeRef) obj).name);
     }
 
     @Override
     public String toString() {
-        return name;
+        return "union " + name;
     }
 }

@@ -1,32 +1,96 @@
 package net.loveruby.cflat.type;
 
-import com.sun.xml.internal.ws.wsdl.writer.document.ParamType;
+import java.util.List;
 
 /**
- * Created by Administrator on 2018/2/9.
+ * @author 刘科 2018/5/29
  */
 public class FunctionType extends Type {
 
     protected Type returnType;
     protected ParamTypes paramTypes;
 
+    public FunctionType(Type returnType, ParamTypes paramTypes) {
+        this.returnType = returnType;
+        this.paramTypes = paramTypes;
+    }
+
+    @Override
+    public boolean isFunction() {
+        return true;
+    }
+
+    @Override
+    public boolean isCallable() {
+        return true;
+    }
+
+    public Type returnType(){
+        return returnType;
+    }
+
+    public boolean isVararg(){
+        return paramTypes.isVararg();
+    }
+
+    public boolean acceptArgc(long numArgs){
+        if(isVararg()){
+            return numArgs >= paramTypes.minArgc();
+        }else {
+            return numArgs == paramTypes.argc();
+        }
+    }
+
+
+    /**
+     * Returns iterator of mandatory parameter types.
+     * This method does NOT include types for varargs.
+     */
+    public List<Type> paramTypes(){
+        return paramTypes.types();
+    }
     public long size() {
-        return 0;
+        throw new Error("FunctionType#size called");
+    }
+
+    public long alignment(){
+        throw new Error("FunctionType#alignment called");
     }
 
     public boolean isSameType(Type other) {
-        return false;
+        if(!other.isFunction()){
+            return false;
+        }
+        FunctionType otherType = other.getFunctionType();
+        return (returnType.isSameType(otherType.returnType)) &&
+                (paramTypes.isSameType(otherType.paramTypes));
     }
 
     public boolean isCompatible(Type other) {
-        return false;
+        if(!other.isFunction()){
+            return false;
+        }
+        FunctionType otherType = other.getFunctionType();
+        return (returnType.isCompatible(otherType.returnType)) &&
+                (paramTypes.isSameType(otherType.paramTypes));
     }
 
     public boolean isCastableTo(Type target) {
-        return false;
+        return target.isFunction();
     }
 
-    public Type returnType() {
-        return returnType;
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(returnType.toString());
+        sb.append("(");
+        String seq = "";
+        for(Type type: paramTypes()){
+            sb.append(seq);
+            sb.append(type.toString());
+            seq = ", ";
+        }
+        sb.append(")");
+        return sb.toString();
     }
 }
