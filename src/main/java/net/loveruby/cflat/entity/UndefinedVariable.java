@@ -4,15 +4,20 @@ import net.loveruby.cflat.ast.Dumper;
 import net.loveruby.cflat.ast.TypeNode;
 
 /**
- * Created by Administrator on 2018/2/6.
+ * @author 刘科 2018/5/29
  */
 public class UndefinedVariable extends Variable {
 
-    public UndefinedVariable(String name, boolean isPrivate, TypeNode typeNode) {
-        super(name, isPrivate, typeNode);
+    public UndefinedVariable(TypeNode typeNode, String name) {
+        super(false, typeNode, name);
     }
 
     public boolean isDefined() {
+        return false;
+    }
+
+    @Override
+    public boolean isPrivate() {
         return false;
     }
 
@@ -21,10 +26,12 @@ public class UndefinedVariable extends Variable {
     }
 
     public <T> T accept(EntityVisitor<T> visitor) {
-        return null;
+        return visitor.visit(this);
     }
 
     protected void _dump(Dumper d) {
-
+        d.printMember("name", name);
+        d.printMember("isPrivate", isPrivate());
+        d.printMember("typeNode", typeNode);
     }
 }

@@ -13,8 +13,8 @@ public class Constant extends Entity {
     private ExprNode value;
     private String name;
 
-    public Constant(String name, ExprNode value, TypeNode typeNode) {
-        super(name, true, typeNode);
+    public Constant(TypeNode typeNode, String name, ExprNode value) {
+        super(true, typeNode, name);
         this.value = value;
     }
 

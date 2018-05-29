@@ -223,14 +223,32 @@ public class TypeTable {
         }
     }
 
+    // 检查 结构体和联合体 的循环定义
     public void checkRecursiveDefinition(Type type, ErrorHandler handler){
-        _checkRecuisiveDefinition(type, new HashMap<Type, Object>(), handler);
+        _checkRecursiveDefinition(type, new HashMap<Type, Object>(), handler);
     }
 
     static final protected Object checking = new Object();
     static final protected Object checked = new Object();
 
-    protected void _checkRecuisiveDefinition(Type type, Map<Type, Object> marks, ErrorHandler handler){
-
+    protected void _checkRecursiveDefinition(Type type, Map<Type, Object> marks, ErrorHandler handler){
+        if(marks.get(type) == checking ){
+            handler.error(((NamedType)type).location(), "recursive type definition: " + type);
+            return;
+        }else if(marks.get(type) == checked){
+            return;
+        }else {
+            marks.put(type, checking);
+            if(type instanceof ArrayType){
+                _checkRecursiveDefinition(((ArrayType) type).baseType, marks, handler);
+            }else if(type instanceof CompositeType){
+                for (Slot slot : ((CompositeType) type).members()){
+                    _checkRecursiveDefinition(slot.type(), marks, handler);
+                }
+            }else if(type instanceof UserType){
+                _checkRecursiveDefinition(((UserType) type).realType(), marks, handler);
+            }
+            marks.put(type, checked);
+        }
     }
 }

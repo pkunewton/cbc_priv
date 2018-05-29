@@ -16,16 +16,16 @@ abstract public class Entity
 
     protected String name;
     protected boolean isPrivate;
-    protected TypeNode type;
+    protected TypeNode typeNode;
     // 变量引用次数
     protected long nRefered;
     protected MemoryReference memref;
     protected Operand address;
 
-    public Entity(String name, boolean isPrivate, TypeNode typeNode) {
+    public Entity(boolean priv, TypeNode typeNode, String name) {
         this.name = name;
         this.isPrivate = isPrivate;
-        this.type = typeNode;
+        this.typeNode = typeNode;
         this.nRefered = 0;
     }
 
@@ -49,11 +49,11 @@ abstract public class Entity
     }
 
     public TypeNode typeNode() {
-        return type;
+        return typeNode;
     }
 
     public Type type() {
-        return type.type();
+        return typeNode.type();
     }
 
     public long allocSize() {
