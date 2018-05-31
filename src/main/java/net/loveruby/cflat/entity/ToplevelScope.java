@@ -129,7 +129,7 @@ public class ToplevelScope extends Scope {
             }
         }
         // 递归检查 变量是否未被引用
-        // 不要检查 函数参数
+        // 不要检查 函数参数,函数参数有一个单独的定义域空间
         for(LocalScope funcScope: children){
             for(LocalScope scope: funcScope.children){
                 scope.checkReferences(handler);

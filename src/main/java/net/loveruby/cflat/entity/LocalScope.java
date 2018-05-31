@@ -84,7 +84,7 @@ public class LocalScope extends Scope {
 
     /**
      * Returns local variables defined in this scope. 本定义域定义的变量
-     * Does NOT includes children's local variables.  不含自定义域的变量
+     * Does NOT includes children's local variables.  不含子定义域的变量
      * Does NOT include static local variables.       不含静态变量
      */
     public List<DefinedVariable> localVariables(){
