@@ -1,14 +1,14 @@
 package net.loveruby.cflat.asm;
 
 /**
- * Created by Administrator on 2018/2/8.
+ * @author 刘科  2018/6/1
  */
 public class Label extends Assembly {
 
     protected Symbol symbol;
 
     public Label(){
-
+        this(new UnnamedSymbol());
     }
 
     public Label(Symbol symbol) {
@@ -19,11 +19,16 @@ public class Label extends Assembly {
         return symbol;
     }
 
+    @Override
+    public boolean isLabel() {
+        return true;
+    }
+
     public String toSource(SymbolTable table) {
-        return null;
+        return symbol.toSource(table) + ":";
     }
 
     public String dump() {
-        return null;
+        return "(Label " + symbol.dump() + ")";
     }
 }

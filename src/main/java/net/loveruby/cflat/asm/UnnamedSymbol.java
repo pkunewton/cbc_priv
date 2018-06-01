@@ -26,7 +26,7 @@ public class UnnamedSymbol extends BaseSymbol {
     }
 
     public String dump() {
-        return null;
+        return "(UnnamedSymbol @" + Integer.toHexString(hashCode()) + ")";
     }
 
     public int cmp(IntegerLiteral i) {
