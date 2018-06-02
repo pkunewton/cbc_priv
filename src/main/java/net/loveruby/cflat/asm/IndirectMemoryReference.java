@@ -23,7 +23,7 @@ public class IndirectMemoryReference extends MemoryReference {
         this.fixed = fixed;
     }
 
-    static IndirectMemoryReference relocatable(long offset, Register base){
+    public static IndirectMemoryReference relocatable(long offset, Register base){
         return new IndirectMemoryReference(new IntegerLiteral(offset), base, false);
     }
 
