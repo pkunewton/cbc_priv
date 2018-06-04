@@ -11,7 +11,7 @@ import java.util.*;
 public class ToplevelScope extends Scope {
 
     protected Map<String, Entity> entities;
-    protected List<DefinedVariable> staticLocalVariables; // 自定义域中所有的静态变量
+    protected List<DefinedVariable> staticLocalVariables; // 子定义域中所有的静态变量
 
     public ToplevelScope() {
         super();
