@@ -9,6 +9,10 @@ import java.util.Map;
 
 /**
  * @author 刘科 2018/5/29
+ * 类型定义检查
+ * 1、含有void的数组，结构体和联合体
+ * 2、成员重复的结构体和联合体
+ * 3、循环定义的结构体和联合体
  */
 public class TypeTable {
 
