@@ -14,7 +14,7 @@ abstract public class ExprNode extends Node {
 
     abstract public Type type();
     // 比如数组的元素a[i] 的 origType 类型 应该是 a 的元素类型
-    // 而不是 a 的类型
+    // 而不是 a数组 的类型
     protected Type origType() { return type(); }
 
     public long allocSize() { return type().allocSize(); }

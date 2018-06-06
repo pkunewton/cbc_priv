@@ -2,7 +2,6 @@ package net.loveruby.cflat.compiler;
 
 import net.loveruby.cflat.ast.*;
 import net.loveruby.cflat.entity.*;
-import net.loveruby.cflat.ir.Str;
 import net.loveruby.cflat.type.*;
 import net.loveruby.cflat.utils.ErrorHandler;
 
@@ -125,6 +124,7 @@ public class TypeResolver extends Visitor implements EntityVisitor<Void>, Declar
                 ((FunctionTypeRef)function.typeNode().typeRef()).params().isVararg());
         Type functionType = new FunctionType(returnType, paramTypes);
         typeTable.put(function.typeNode().typeRef(), functionType);
+        bindType(function.typeNode());
     }
 
     public Void visit(Constant constant) {
