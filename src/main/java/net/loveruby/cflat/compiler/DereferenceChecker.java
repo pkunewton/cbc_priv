@@ -3,7 +3,6 @@ package net.loveruby.cflat.compiler;
 import net.loveruby.cflat.ast.*;
 import net.loveruby.cflat.entity.DefinedFunction;
 import net.loveruby.cflat.entity.DefinedVariable;
-import net.loveruby.cflat.entity.Variable;
 import net.loveruby.cflat.exception.SemanticError;
 import net.loveruby.cflat.exception.SemanticException;
 import net.loveruby.cflat.type.CompositeType;
@@ -12,7 +11,7 @@ import net.loveruby.cflat.type.TypeTable;
 import net.loveruby.cflat.utils.ErrorHandler;
 
 /**
- * @author 刘科  2018/6/5
+ * @author 刘科  2018/6/6
  * 1、未无法赋值的表达式赋值  1=1+1
  * 2、使用非法的函数名调用函数  sxas(1)
  * 3、操作数非法的数组引用    1[2]
@@ -211,20 +210,20 @@ public class DereferenceChecker extends Visitor{
         return null;
     }
 
-    public Void visit(CastNode node){
-        super.visit(node);
-        if(node.type().isArray()){
-            semanticError(node, "cast specifies array type");
-        }
-        return null;
-    }
-
     public Void visit(VariableNode node){
         super.visit(node);
         if(node.entity().isConstant()){
             checkConstant(node.entity().value());
         }
         handleImplicitAddress(node);
+        return null;
+    }
+
+    public Void visit(CastNode node){
+        super.visit(node);
+        if(node.type().isArray()){
+            semanticError(node, "cast specifies array type");
+        }
         return null;
     }
 

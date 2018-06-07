@@ -10,11 +10,11 @@ public abstract class Type {
     static final public long sizeUnknown = -1;
 
     abstract public long size();
-    // 分配的存储空间大小
+    // 分配的存储空间大小，数组size是指针大小，allocSize数据大小
     public long allocSize() { return size(); }
     /**
      * @see net.loveruby.cflat.utils.AsmUtils 根据平台 alignment 校准分配空间
-     * 校准对齐后的存储空间大小
+     * 对齐量，该类型数据是 alignment 的整数倍
      */
     public long alignment() { return allocSize(); }
 

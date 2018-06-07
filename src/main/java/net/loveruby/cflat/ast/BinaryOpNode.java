@@ -26,6 +26,10 @@ public class BinaryOpNode extends ExprNode {
         this.type = type;
     }
 
+    public String operator(){
+        return operator;
+    }
+
     public Type type() {
         return (type==null)?lhs.type():type;
     }

@@ -53,7 +53,7 @@ public class IntegerType extends Type {
     }
 
     // 不重写equals方法
-
+    // 因为同一种 IntegerType 只会生成一个
     public boolean isSameType(Type other) {
         if(!other.isInteger()){
             return false;
