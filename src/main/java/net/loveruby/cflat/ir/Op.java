@@ -16,8 +16,8 @@ public enum Op {
     BIT_OR,
     BIT_XOR,
     BIT_LSHIFT,    // 逻辑左移， 无符号 <<
-    BIT_RSHIFT,
-    ARITH_RSHIFT,  // 算数右移
+    BIT_RSHIFT,    // 逻辑右移， 无符号
+    ARITH_RSHIFT,  // 算数右移,  高位符号扩展
 
     EQ,
     NEQ,

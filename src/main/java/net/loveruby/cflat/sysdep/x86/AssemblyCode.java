@@ -273,6 +273,7 @@ public class AssemblyCode implements net.loveruby.cflat.sysdep.AssemblyCode {
      */
     class VirtualStack {
 
+        // 这里的 offset 是真正计算时，是 -offset
         protected long offset;
         protected long max;
         protected List<IndirectMemoryReference> memrefs =
