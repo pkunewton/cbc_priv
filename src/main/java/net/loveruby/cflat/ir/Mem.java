@@ -19,7 +19,7 @@ public class Mem extends Expr {
     }
 
     @Override
-    public Expr addressNode() {
+    public Expr addressNode(Type type) {
         return expr;
     }
 

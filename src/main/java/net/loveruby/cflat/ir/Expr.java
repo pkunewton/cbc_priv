@@ -44,7 +44,7 @@ abstract public class Expr implements Dumpable {
         throw new Error("Expr#memref called");
     }
 
-    public Expr addressNode(){
+    public Expr addressNode(Type type){
         throw new Error("unexcepted node for LHS: " + this.getClass());
     }
 

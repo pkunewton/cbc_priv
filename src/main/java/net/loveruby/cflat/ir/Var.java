@@ -49,8 +49,8 @@ public class Var extends Expr {
     }
 
     @Override
-    public Expr addressNode() {
-        return new Addr(type, entity);
+    public Expr addressNode(Type t) {
+        return new Addr(t, entity);
     }
 
     @Override
