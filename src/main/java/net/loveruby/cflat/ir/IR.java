@@ -19,8 +19,8 @@ public class IR {
     List<UndefinedFunction> funcdecls;
     ToplevelScope scope;
     ConstantTable constantTable;
-    List<DefinedVariable> gvars;        // cache
-    List<DefinedVariable> comms;        // cache
+    List<DefinedVariable> gvars;        // 有初值
+    List<DefinedVariable> comms;        // 无初值
 
     public IR(Location source, List<DefinedVariable> defvars, List<DefinedFunction> defuns,
               List<UndefinedFunction> funcdecls, ToplevelScope scope, ConstantTable constantTable){

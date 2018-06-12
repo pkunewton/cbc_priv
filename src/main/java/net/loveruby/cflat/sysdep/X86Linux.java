@@ -23,10 +23,10 @@ public class X86Linux implements Platform {
     }
 
     public Assembler assembler(ErrorHandler handler) {
-        return null;
+        return new GNUAssembler(handler);
     }
 
     public Linker linker(ErrorHandler handler) {
-        return null;
+        return new GNULinker(handler);
     }
 }
