@@ -4,6 +4,7 @@ import net.loveruby.cflat.asm.*;
 import net.loveruby.cflat.entity.*;
 import net.loveruby.cflat.ir.*;
 import net.loveruby.cflat.sysdep.CodeGeneratorOptions;
+import net.loveruby.cflat.type.NamedType;
 import net.loveruby.cflat.utils.AsmUtils;
 import net.loveruby.cflat.utils.ErrorHandler;
 import net.loveruby.cflat.utils.ListUtils;
@@ -694,7 +695,7 @@ public class CodeGenerator implements net.loveruby.cflat.sysdep.CodeGenerator, I
         compile(s.cond());
         Type type = s.cond().type();
         as.test(ax(type), ax(type));
-        // test 结果 非0 时 跳转
+        // test 结果 非0 时 跳转jump if no zero
         as.jnz(s.thenLabel());
         as.jmp(s.elseLabel());
         return null;
@@ -734,6 +735,31 @@ public class CodeGenerator implements net.loveruby.cflat.sysdep.CodeGenerator, I
         if(node.right().isConstant() && !doesRequireRegisterOperand(op)){
             compile(node.left());
             compileBinaryOp(op, ax(type), node.right().asmValue());
+        }else if(node.right().isConstant()){
+            compile(node.left());
+            loadConstant(node.right(), cx());
+            compileBinaryOp(op, ax(type), cx(type));
+        }else if(node.right().isVar()){
+            compile(node.left());
+            loadVariable((Var) node.right(), cx());
+            compileBinaryOp(op, ax(type), cx(type));
+        }else if(node.right().isAddr()){
+            compile(node.left());
+            loadAddress(node.right().getEntityForce(), cx());
+            compileBinaryOp(op, ax(type), cx(type));
+        }else if(node.left().isConstant()
+                || node.left().isVar()
+                || node.left().isAddr()){
+            compile(node.right());
+            as.mov(ax(), cx());
+            compile(node.left());
+            compileBinaryOp(op, ax(type), cx(type));
+        }else {
+            compile(node.right());
+            as.virtualPush(ax());
+            compile(node.left());
+            as.virtualPop(cx());
+            compileBinaryOp(op, ax(type), cx(type));
         }
         return null;
     }
@@ -766,6 +792,7 @@ public class CodeGenerator implements net.loveruby.cflat.sysdep.CodeGenerator, I
                 break;
             case S_DIV:
             case S_MOD:
+                // 符号扩展 edx
                 as.cltd();
                 as.idiv(cx(left.type));
                 if(op == Op.S_MOD){
@@ -774,28 +801,93 @@ public class CodeGenerator implements net.loveruby.cflat.sysdep.CodeGenerator, I
                 break;
             case U_DIV:
             case U_MOD:
-
+                // 零扩展 edx
+                as.mov(imm(0), dx());
+                as.div(cx(left.type));
+                if(op == Op.U_MOD){
+                    as.mov(dx(), left);
+                }
+                break;
+            case BIT_AND:
+                as.and(right, left);
+                break;
+            case BIT_OR:
+                as.or(right, left);
+                break;
+            case BIT_XOR:
+                as.xor(right, left);
+                break;
+            case BIT_LSHIFT:
+                as.sal(cl(), left);
+                break;
+            case BIT_RSHIFT:
+                as.shr(cl(), left);
+                break;
+            case ARITH_RSHIFT:
+                as.sar(cl(), left);
+                break;
+            default:
+                as.cmp(right, ax(left.type));
+                switch (op){
+                    case EQ: as.sete(al()); break;
+                    case NEQ: as.setne(al()); break;
+                    case S_GT: as.setg(al()); break;
+                    case S_GTEQ: as.setge(al()); break;
+                    case S_LT: as.setl(al()); break;
+                    case S_LTEQ: as.setle(al()); break;
+                    case U_GT: as.seta(al()); break;
+                    case U_GTEQ: as.setae(al()); break;
+                    case U_LT: as.setb(al()); break;
+                    case U_LTEQ: as.setbe(al()); break;
+                    default:
+                        throw new Error("unknown binary operator: " + op);
+                }
+                as.movzx(al(), left);
         }
 
     }
 
     public Void visit(Uni node){
+        Type src = node.expr().type();
+        Type dest = node.type();
 
+        compile(node.expr());
+        switch (node.op()){
+            case UMINUS:
+                as.neg(ax(src));
+                break;
+            case BIT_NOT:
+                as.not(ax(src));
+                break;
+            case NOT:
+                as.test(ax(src), ax(dest));
+                as.sete(al());
+                as.movzx(al(), ax(dest));
+                break;
+            case S_CAST:
+                as.movsx(ax(src), ax(dest));
+                break;
+            case U_CAST:
+                as.movzx(ax(src), ax(dest));
+                break;
+            default:
+                throw new Error("unknown unary operator: " + node.op());
+        }
         return null;
     }
 
     public Void visit(Var node){
-
+        loadVariable(node, ax());
         return null;
     }
 
     public Void visit(Int node){
-
+        as.mov(imm(node.value()), ax());
         return null;
     }
 
     public Void visit(Str node){
-
+        loadConstant(node, ax());
         return null;
     }
 
@@ -804,17 +896,33 @@ public class CodeGenerator implements net.loveruby.cflat.sysdep.CodeGenerator, I
     //
 
     public Void visit(Assign node){
-
+        if(node.lhs().isAddr() && node.lhs().memref() != null){
+            compile(node.rhs());
+            store(ax(node.lhs().type()), node.lhs().memref());
+        }else if(node.rhs().isConstant()){
+            compile(node.lhs());
+            as.mov(ax(), cx());
+            loadConstant(node.rhs(), ax());
+            store(ax(node.lhs().type()), mem(cx()));
+        }else {
+            compile(node.rhs());
+            as.virtualPush(ax());
+            compile(node.lhs());
+            as.mov(ax(), cx());
+            as.virtualPop(ax());
+            store(ax(node.lhs().type()), mem(cx()));
+        }
         return null;
     }
 
-    public Void visit(Mem e) {
-
+    public Void visit(Mem node) {
+        compile(node.expr());
+        load(mem(ax()), ax(node.type()));
         return null;
     }
 
-    public Void visit(Addr e) {
-
+    public Void visit(Addr node) {
+        loadAddress(node.entity(), ax());
         return null;
     }
 
