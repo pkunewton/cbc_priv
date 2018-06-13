@@ -10,4 +10,9 @@ public class PeepholeOptimizer {
     public List<Assembly> optimize(List<Assembly> assemblies){
         return null;
     }
+
+    public static PeepholeOptimizer defaultSet(){
+        PeepholeOptimizer set = new PeepholeOptimizer();
+        return set;
+    }
 }

@@ -6,8 +6,9 @@ import net.loveruby.cflat.ir.*;
 import net.loveruby.cflat.sysdep.CodeGeneratorOptions;
 import net.loveruby.cflat.utils.AsmUtils;
 import net.loveruby.cflat.utils.ErrorHandler;
+import net.loveruby.cflat.utils.ListUtils;
 
-import java.util.List;
+import java.util.*;
 
 /**
  * @author 刘科  2018/6/10
@@ -26,7 +27,7 @@ import java.util.List;
  *          compileCommonSymbol
  *          PICThunk
  */
-public class CodeGenerator implements net.loveruby.cflat.sysdep.CodeGenerator {
+public class CodeGenerator implements net.loveruby.cflat.sysdep.CodeGenerator, IRVisitor<Void, Void> {
 
     final CodeGeneratorOptions options;
     final Type natureType;
@@ -397,13 +398,166 @@ public class CodeGenerator implements net.loveruby.cflat.sysdep.CodeGenerator {
 
     private void compileFunctionBody(AssemblyCode file, DefinedFunction function){
         StackFrameInfo frame = new StackFrameInfo();
+        // cfb_locate
+        // 确定 参数 的内存位置
+        locateParameters(function.parameters());
+        // 确定 局部变量的位置 和 使用的最大栈长度
+        frame.lvarSize = locateLocalVariable(function.lvarScope());
 
+        // cfb_offset
+        // 编译函数体 并进行优化， body保存了 函数体代码 和 虚拟栈中临时变量的数据
+        AssemblyCode body = optimize(compileStmts(function));
+        frame.saveRegs = usedCalleeSaveRegisters(body);
+        frame.tempSize = body.virtualStack.maxSize();
 
+        // 修正 局部变量和临时变量内存地址
+        fixLocalVariableOffsets(function.lvarScope(), frame.lvarOffset());
+        fixTempVariableOffsets(body, frame.tempOffset());
+
+        if(options.isVerboseAsm()){
+            // 打印帧栈布局
+            printStackFrameLayout(file, frame, function.localVariables());
+        }
+        generateFunctionBody(file, body, frame);
+    }
+
+    private AssemblyCode optimize(AssemblyCode body){
+        if(options.optimizeLevel() < 1){
+            return body;
+        }
+        body.apply(PeepholeOptimizer.defaultSet());
+        body.reduceLabels();
+        return body;
+    }
+
+    private void printStackFrameLayout(AssemblyCode file,
+                                       StackFrameInfo frame, List<DefinedVariable> lvars){
+        List<MemInfo> vars = new ArrayList<MemInfo>();
+        for(DefinedVariable variable: lvars){
+            vars.add(new MemInfo(variable.memref(), variable.name()));
+        }
+        vars.add(new MemInfo(mem(0, bp()), "saved %ebp"));
+        vars.add(new MemInfo(mem(4, bp()), "return address"));
+        if(frame.saveRegisters() > 0){
+            vars.add(new MemInfo(mem(-frame.saveRegisters(), bp()),
+                    "saved callee-saved registers (" + frame.saveRegisters() + " bytes)"));
+        }
+        if(frame.tempSize > 0){
+            vars.add(new MemInfo(mem(-frame.frameSize(), bp()),
+                    "temp variables (" + frame.tempSize + " bytes)"));
+        }
+        Collections.sort(vars, new Comparator<MemInfo>() {
+            public int compare(MemInfo o1, MemInfo o2) {
+                return o1.mem.compareTo(o2.mem);
+            }
+        });
+        file.comment("----- Stack Frame Layout -------------------");
+        for(MemInfo memInfo: vars){
+            file.comment(memInfo.mem.toString() + ": " + memInfo.name);
+        }
+        file.comment("---------------------------------------------");
+    }
+
+    class MemInfo {
+        MemoryReference mem;
+        String name;
+
+        public MemInfo(MemoryReference mem, String name) {
+            this.mem = mem;
+            this.name = name;
+        }
     }
 
 
     private AssemblyCode as;
     private Label epilogue;
+
+    private AssemblyCode compileStmts(DefinedFunction function){
+        // AssemblyCode 这个对象保存函数体代码和虚拟栈中临时变量信息
+        as = newAssemblyCode();
+        epilogue = new Label();
+        for(Stmt stmt: function.ir()){
+            compileStmt(stmt);
+        }
+        // 用于 return 关键字
+        as.label(epilogue);
+        return as;
+    }
+
+    // does NOT include BP
+    private List<Register> usedCalleeSaveRegisters(AssemblyCode body){
+        List<Register> registers = new ArrayList<Register>();
+        for(Register register: callSaveRegisters()){
+            if(body.doesUses(register)){
+               registers.add(register);
+            }
+        }
+        registers.remove(bp());
+        return registers;
+    }
+
+    static final RegisterClass[] CALLEE_SAVE_REGISTERS = {
+      RegisterClass.BX, RegisterClass.BP,
+      RegisterClass.SI, RegisterClass.DI
+    };
+
+    private List<Register> callSaveRegistersCache = null;
+
+    private List<Register> callSaveRegisters(){
+        if(callSaveRegistersCache == null){
+            List<Register> registers = new ArrayList<Register>();
+            for(RegisterClass r: CALLEE_SAVE_REGISTERS){
+                registers.add(new Register(r, natureType));
+            }
+            callSaveRegistersCache = registers;
+        }
+        return callSaveRegistersCache;
+    }
+
+    private void generateFunctionBody(AssemblyCode file, AssemblyCode body, StackFrameInfo frame){
+        file.virtualStack.reset();
+        prologue(file, frame.saveRegs, frame.frameSize());
+        if(options.isPositionIndependent() && body.doesUses(GOTBaseReg())){
+            loadGOTBaseAddress(file, GOTBaseReg());
+        }
+        file.addAll(body.assemblies());
+        epilogue(file, frame.saveRegs);
+        file.virtualStack.fixOffset(0);
+    }
+
+    // 函数序言
+    private void prologue(AssemblyCode file,
+                          List<Register> saveRegs, long frameSize){
+        file.push(bp());
+        file.mov(sp(), bp());
+        for(Register reg: saveRegs){
+            file.virtualPush(reg);
+        }
+        extendStack(file, frameSize);
+    }
+
+    // 函数尾声
+    private void epilogue(AssemblyCode file, List<Register> saveRegs){
+        // 弹出的时候 寄存器 顺序要改变
+        for(Register reg: ListUtils.reverse(saveRegs)){
+            file.virtualPop(reg);
+        }
+        file.mov(bp(), sp());
+        file.pop(bp());
+        file.ret();
+    }
+
+    private void extendStack(AssemblyCode file, long len){
+        if(len > 0){
+            file.sub(imm(len), sp());
+        }
+    }
+
+    private void rewindStack(AssemblyCode file, long len){
+        if(len > 0){
+            file.add(imm(len), sp());
+        }
+    }
 
     /**
      * ======================= 0(%ebp)
@@ -432,32 +586,237 @@ public class CodeGenerator implements net.loveruby.cflat.sysdep.CodeGenerator {
     /**
      * Allocates addresses of local variables, but offset is still
      * not determined, assign unfixed IndirectMemoryReference.
+     *
+     * --------------------   esp #2 (stack top after alloca call)
+     * alloca area
+     * ---------------------   esp #1 (stack top just after prelude)
+     * temporary
+     * variables...
+     * ---------------------   -16(%ebp)
+     * lvar 3
+     * ---------------------   -12(%ebp)
+     * lvar 2
+     * ---------------------   -8(%ebp)
+     * lvar 1
+     * ---------------------   -4(%ebp)
+     * callee-saved register
+     * ======================= 0(%ebp)
      */
     private long locateLocalVariable(LocalScope scope){
         return locateLocalVarialbe(scope, 0);
     }
-
+    // 确定局部变量的位置
     private long locateLocalVarialbe(LocalScope scope, long parentStackLen){
-
-        return 0;
+        long len = parentStackLen;
+        for(DefinedVariable variable: scope.localVariables()){
+            len = assignStack(len + variable.allocSize());
+            variable.setMemref(relocatableMem(-len, bp()));
+        }
+        long maxLen = len;
+        for(LocalScope s : scope.children()){
+            long child = locateLocalVarialbe(s, len);
+            maxLen = Math.max(maxLen, child);
+        }
+        return maxLen;
     }
 
+    private IndirectMemoryReference relocatableMem(long offset, Register base){
+        return IndirectMemoryReference.relocatable(offset, base);
+    }
+    // 考虑 callee-save register后修正局部变量的内存地址
+    private void fixLocalVariableOffsets(LocalScope scope, long len){
+        for(DefinedVariable variable: scope.allLocalVariables()){
+            variable.memref().fixOffset(-len);
+        }
+    }
+
+    private void fixTempVariableOffsets(AssemblyCode asm, long len){
+        asm.virtualStack.fixOffset(-len);
+    }
+
+    /**
+     * Implements cdecl function call:
+     *    * All arguments are on stack.
+     *    * Caller rewinds stack pointer.
+     */
+    public Void visit(Call node){
+        for(Expr arg: ListUtils.reverse(node.args())){
+            compile(arg);
+            as.push(ax());
+        }
+        // 是否函数指针
+        if(node.isStaticCall()){
+            as.call(node.function().callingSymbol());
+        }else {
+            compile(node.expr());
+            as.callAbsolute(ax());
+        }
+        rewindStack(as, stackSizeFromWordNum(node.numArgs()));
+        return null;
+    }
+
+    public Void visit(Return node){
+        if(node.expr() != null){
+            compile(node.expr());
+        }
+        as.jmp(epilogue);
+        return null;
+    }
     //
     // Statements
     //
 
+    private void compileStmt(Stmt stmt){
+        if(options.isVerboseAsm()){
+            if(stmt.location() != null){
+                as.comment(stmt.location().numberedLine());
+            }
+        }
+        stmt.accept(this);
+    }
+
+    public Void visit(ExprStmt node){
+        compile(node.expr());
+        return null;
+    }
+
+    public Void visit(LabelStmt s) {
+        as.label(s.label());
+        return null;
+    }
+
+    public Void visit(Jump s) {
+        as.jmp(s.label());
+        return null;
+    }
+
+    public Void visit(CJump s) {
+        compile(s.cond());
+        Type type = s.cond().type();
+        as.test(ax(type), ax(type));
+        // test 结果 非0 时 跳转
+        as.jnz(s.thenLabel());
+        as.jmp(s.elseLabel());
+        return null;
+    }
+
+    public Void visit(Switch s) {
+        compile(s.cond());
+        Type type = s.cond().type();
+        for(Case c: s.cases()){
+            as.mov(imm(c.value), cx());
+            as.cmp(cx(type), ax(type));
+            as.je(c.label);
+        }
+        as.jmp(s.defaultLabel());
+        return null;
+    }
 
     //
     // Expressions
     //
 
+    private void compile(Expr expr){
+        if(options.isVerboseAsm()){
+            as.comment(expr.getClass().getSimpleName() + " {");
+            as.indentComment();
+        }
+        expr.accept(this);
+        if(options.isVerboseAsm()){
+            as.unindentComment();
+            as.comment("}");
+        }
+    }
+
+    public Void visit(Bin node) {
+        Op op = node.op();
+        Type type = node.type();
+        if(node.right().isConstant() && !doesRequireRegisterOperand(op)){
+            compile(node.left());
+            compileBinaryOp(op, ax(type), node.right().asmValue());
+        }
+        return null;
+    }
+
+    private boolean doesRequireRegisterOperand(Op op){
+        switch (op){
+            case S_DIV:
+            case U_DIV:
+            case S_MOD:
+            case U_MOD:
+            case BIT_LSHIFT:
+            case BIT_RSHIFT:
+            case ARITH_RSHIFT:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void compileBinaryOp(Op op, Register left, Operand right){
+        switch (op){
+            case ADD:
+                as.add(right, left);
+                break;
+            case SUB:
+                as.sub(right, left);
+                break;
+            case MUL:
+                as.imul(right, left);
+                break;
+            case S_DIV:
+            case S_MOD:
+                as.cltd();
+                as.idiv(cx(left.type));
+                if(op == Op.S_MOD){
+                    as.mov(dx(), left);
+                }
+                break;
+            case U_DIV:
+            case U_MOD:
+
+        }
+
+    }
+
+    public Void visit(Uni node){
+
+        return null;
+    }
+
+    public Void visit(Var node){
+
+        return null;
+    }
+
+    public Void visit(Int node){
+
+        return null;
+    }
+
+    public Void visit(Str node){
+
+        return null;
+    }
 
     //
     // Assignable expressions
     //
 
+    public Void visit(Assign node){
 
+        return null;
+    }
 
+    public Void visit(Mem e) {
+
+        return null;
+    }
+
+    public Void visit(Addr e) {
+
+        return null;
+    }
 
     //
     // Utilities

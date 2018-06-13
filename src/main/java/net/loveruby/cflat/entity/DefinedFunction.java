@@ -39,7 +39,7 @@ public class DefinedFunction extends Function {
         return ir;
     }
 
-    public void setLocalScope(LocalScope localScope) {
+    public void setScope(LocalScope localScope) {
         this.localScope = localScope;
     }
 

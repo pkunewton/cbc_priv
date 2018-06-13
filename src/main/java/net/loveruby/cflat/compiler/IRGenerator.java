@@ -220,6 +220,7 @@ public class IRGenerator implements ASTVisitor<Void, Expr> {
 
         Expr cond = transformExpr(node.cond());
 
+        // 不存在 default 标签时， default  设置为 end 标签
         for(CaseNode caseNode: node.cases()){
             if(caseNode.isDefault()){
                 defaultLabel = caseNode.label();

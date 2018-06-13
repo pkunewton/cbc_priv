@@ -76,7 +76,7 @@ public class LocalResolver extends Visitor {
         for(DefinedFunction function: functions){
             pushScope(function.parameters());
             resolve(function.body());
-            popScope();
+            function.setScope(popScope());
         }
 
     }

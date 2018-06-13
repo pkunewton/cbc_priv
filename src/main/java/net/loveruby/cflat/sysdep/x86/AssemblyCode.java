@@ -519,6 +519,7 @@ public class AssemblyCode implements net.loveruby.cflat.sysdep.AssemblyCode {
         insn(base.type, "xor", bits, base);
     }
 
+    // 算术右移 高位符号扩展 shift arithmetic right
     void sar(Operand bits, Register base){
         insn(base.type, "sar", bits, base);
     }
@@ -528,7 +529,7 @@ public class AssemblyCode implements net.loveruby.cflat.sysdep.AssemblyCode {
     }
 
     void shr(Operand bits, Register base){
-        // 算数右移， 高位零扩展
+        // shift right 逻辑右移， 高位零扩展
         insn(base.type, "shr", bits, base);
     }
 
