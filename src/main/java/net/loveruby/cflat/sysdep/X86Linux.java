@@ -15,7 +15,7 @@ public class X86Linux implements Platform {
     }
 
     public CodeGenerator codeGenerator(CodeGeneratorOptions options, ErrorHandler handler) {
-        return null;
+        return new net.loveruby.cflat.sysdep.x86.CodeGenerator(options, naturalType(), handler);
     }
 
     private Type naturalType(){

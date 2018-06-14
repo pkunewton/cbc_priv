@@ -1,7 +1,6 @@
 package net.loveruby.cflat.sysdep.x86;
 
 import net.loveruby.cflat.asm.*;
-import net.loveruby.cflat.ir.Op;
 import net.loveruby.cflat.utils.TextUtils;
 
 import java.io.PrintStream;
