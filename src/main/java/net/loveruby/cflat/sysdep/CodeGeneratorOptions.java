@@ -41,15 +41,15 @@ public class CodeGeneratorOptions {
         this.optimizeLevel = optimizeLevel;
     }
 
-    public void generatePIC(boolean generatePIC) {
-        this.generatePIC = generatePIC;
+    public void generatePIC() {
+        this.generatePIC = true;
     }
 
-    public void generatePIE(boolean generatePIE) {
-        this.generatePIE = generatePIE;
+    public void generatePIE() {
+        this.generatePIE = true;
     }
 
-    public void generateVerboseAsm(boolean verboseAsm) {
-        this.verboseAsm = verboseAsm;
+    public void generateVerboseAsm() {
+        this.verboseAsm = true;
     }
 }

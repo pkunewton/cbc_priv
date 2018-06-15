@@ -7,6 +7,6 @@ import net.loveruby.cflat.exception.IPCException;
  */
 public interface Assembler {
 
-    void assemble(String path, String destPath, AssemblerOption option)
+    void assemble(String path, String destPath, AssemblerOptions option)
             throws IPCException;
 }

@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * @author 刘科  2018/6/14
  */
-public class AssemblerOption {
+public class AssemblerOptions {
 
     public boolean verbose = false;
     List<String> args = new ArrayList<String>();

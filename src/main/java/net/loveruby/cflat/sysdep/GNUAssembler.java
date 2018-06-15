@@ -18,7 +18,7 @@ public class GNUAssembler implements Assembler {
         this.errorHandler = errorHandler;
     }
 
-    public void assemble(String srcPath, String destPath, AssemblerOption option) throws IPCException {
+    public void assemble(String srcPath, String destPath, AssemblerOptions option) throws IPCException {
         List<String> cmd = new ArrayList<String>();
         cmd.add("as");
         cmd.addAll(option.args);
