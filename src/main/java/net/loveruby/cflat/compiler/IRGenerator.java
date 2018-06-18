@@ -94,9 +94,9 @@ public class IRGenerator implements ASTVisitor<Void, Expr> {
     }
 
 
-    // 生成 赋值 语句
+    // 生成 赋值 语句, 赋值语句左值是地址
     private void assign(Location location, Expr lhs, Expr rhs){
-        stmts.add(new Assign(location, lhs, rhs));
+        stmts.add(new Assign(location, addressOf(lhs), rhs));
     }
 
     private DefinedVariable tmpVar(Type type){
