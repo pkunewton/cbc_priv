@@ -20,7 +20,7 @@ public class Options {
 
     static Options parse(String[] args){
         Options options = new Options();
-
+        options.parseArgs(args);
         return options;
     }
 
