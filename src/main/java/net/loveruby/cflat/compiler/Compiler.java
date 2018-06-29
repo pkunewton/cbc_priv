@@ -1,6 +1,5 @@
 package net.loveruby.cflat.compiler;
 
-import com.sun.org.apache.regexp.internal.RE;
 import net.loveruby.cflat.ast.AST;
 import net.loveruby.cflat.ast.ExprNode;
 import net.loveruby.cflat.ast.StmtNode;
@@ -35,7 +34,15 @@ public class Compiler {
     public void commandMain(String[] args){
         Options options = parseOptions(args);
         if(options.mode() == CompilerMode.CheckSyntax){
-
+            System.exit(checkSyntax(options)? 0 : 1);
+        }
+        try {
+            List<SourceFile> sourceFiles = options.sourceFiles();
+            bulid(sourceFiles, options);
+            System.exit(0);
+        }catch (CompileException e){
+            errorHandler.error(e.getMessage());
+            System.exit(1);
         }
     }
 
